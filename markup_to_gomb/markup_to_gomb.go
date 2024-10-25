@@ -1,4 +1,4 @@
-package main
+package markup_to_gomb
 
 import (
 	"fmt"
@@ -7,31 +7,39 @@ import (
 	"golang.org/x/net/html"
 )
 
-func generateGoCodeFromHTMLNode(n *html.Node, indentLevel int) string {
+func generateGombFromHTMLNode(n *html.Node, indentLevel int) string {
 	var sb strings.Builder
 	indent := strings.Repeat("    ", indentLevel)
 
 	if n.Type == html.TextNode {
 		trimmedText := strings.TrimSpace(n.Data)
 		if trimmedText != "" {
-			sb.WriteString(fmt.Sprintf("%sE(\"\").t(\"%s\")", indent, trimmedText))
+			if strings.Contains(trimmedText, "\n") || strings.Contains(trimmedText, `"`) {
+				sb.WriteString(fmt.Sprintf("%sE(\"\").T(`%s`)", indent, trimmedText))
+			} else {
+				sb.WriteString(fmt.Sprintf("%sE(\"\").T(\"%s\")", indent, trimmedText))
+			}
 		}
 	} else if n.Type == html.ElementNode {
 		sb.WriteString(fmt.Sprintf("%sE(\"%s\")", indent, n.Data))
 		for _, attr := range n.Attr {
-			sb.WriteString(fmt.Sprintf(".a(\"%s\", \"%s\")", attr.Key, attr.Val))
+			sb.WriteString(fmt.Sprintf(".A(\"%s\", \"%s\")", attr.Key, attr.Val))
 		}
 
 		// Check if the element has only one text child
 		if n.FirstChild != nil && n.FirstChild.Type == html.TextNode && n.FirstChild.NextSibling == nil {
 			trimmedText := strings.TrimSpace(n.FirstChild.Data)
 			if trimmedText != "" {
-				sb.WriteString(fmt.Sprintf(".t(\"%s\")", trimmedText))
+				if strings.Contains(trimmedText, "\n") || strings.Contains(trimmedText, `"`) {
+					sb.WriteString(fmt.Sprintf(".T(`%s`)", trimmedText))
+				} else {
+					sb.WriteString(fmt.Sprintf(".T(\"%s\")", trimmedText))
+				}
 			}
 		} else if n.FirstChild != nil {
-			sb.WriteString(".c(\n")
+			sb.WriteString(".C(\n")
 			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				childCode := generateGoCodeFromHTMLNode(c, indentLevel+1)
+				childCode := generateGombFromHTMLNode(c, indentLevel+1)
 				if childCode != "" {
 					sb.WriteString(childCode + ",\n")
 				}
@@ -43,8 +51,8 @@ func generateGoCodeFromHTMLNode(n *html.Node, indentLevel int) string {
 	return sb.String()
 }
 
-func generateGoCodeFromHTMLString(htmlStr string) (string, error) {
-	doc, err := html.Parse(strings.NewReader(htmlStr))
+func GenerateGombFromMarkup(markupStr string) (string, error) {
+	doc, err := html.Parse(strings.NewReader(markupStr))
 	if err != nil {
 		return "", err
 	}
@@ -62,5 +70,5 @@ func generateGoCodeFromHTMLString(htmlStr string) (string, error) {
 		return "", fmt.Errorf("no root element found")
 	}
 
-	return generateGoCodeFromHTMLNode(root, 0), nil
+	return generateGombFromHTMLNode(root, 0), nil
 }
