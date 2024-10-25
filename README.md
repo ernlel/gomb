@@ -1,23 +1,27 @@
-# gomb
-Go Markup Builder
+# GoMB - Go Markup Builder
 
-Node("div").attr("id", "my-div").attr("style","background-color:red;").children(
-		Node("h1").text("Hello"), 
-		Node("ul").children(
+`. "github.com/ernlel/gomb"`
+
+- E - Element
+- A - Attribute
+- T - Text
+- C - Children
+```
+E("div").A("id", "my-div").A("style","background-color:red;").C(
+		E("h1").T("Hello"), 
+		E("ul").C(
 			If(true, 
-				Node("li").text("I am true")
+				E("li").T("I am true")
 			),
 			If(true, 
-				Node("li").text("I am true")
+				E("li").T("I am true")
 			).elseIf(true,
-				Node("li").text("I am true second")
+				E("li").T("I am true second")
 			).else(
-				Node("li").text("I am true second")
+				E("li").T("I am true second")
 			),
-
-			
-
-			Node("li").text("item1"), 
-			Node("li").text("item2")
+			E("li").T("item1"), 
+			E("li").T("item2")
 		)
 	)
+	```
