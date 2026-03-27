@@ -103,7 +103,68 @@ Use `Raw()` to inject pre-rendered fragments or external HTML:
 E("div").C(Raw("<span>already safe HTML</span>"))
 ```
 
-## Serving HTML over HTTP
+## Fragments
+
+`Fragment(els...)` creates a **tag-less wrapper** — it groups multiple elements
+together without emitting any surrounding HTML tag. This is useful when a
+component needs to return several sibling elements, or when you want to insert
+multiple items into a parent without an extra `<div>`.
+
+```go
+// Without Fragment you'd need a wrapper div:
+E("div").C(
+    E("dt").T("Go"),
+    E("dd").T("A statically typed language."),
+)
+
+// Fragment emits the children directly — no wrapper tag:
+func definition(term, desc string) gomb.Element {
+    return Fragment(
+        E("dt").T(term),
+        E("dd").T(desc),
+    )
+}
+
+dl := E("dl").C(
+    definition("Go",   "A statically typed language."),
+    definition("gomb", "An HTML builder for Go."),
+)
+```
+
+Output:
+
+```html
+<dl>
+  <dt>
+    Go
+  </dt>
+  <dd>
+    A statically typed language.
+  </dd>
+  <dt>
+    gomb
+  </dt>
+  <dd>
+    An HTML builder for Go.
+  </dd>
+</dl>
+```
+
+Another common use: returning a group of table cells or list items from a
+helper without wrapping them in an extra element:
+
+```go
+func navLinks(links []Link) gomb.Element {
+    items := Map(links, func(l Link) gomb.Element {
+        return E("li").C(E("a").A("href", l.URL).T(l.Label))
+    })
+    return Fragment(items...)   // no wrapping <ul>/<div>
+}
+
+E("ul").C(navLinks(siteLinks))
+```
+
+
 
 `Render(w)` writes directly to any `io.Writer`, including `http.ResponseWriter`:
 
@@ -305,12 +366,12 @@ an HTTP response-level cache middleware.
 
 ## Converting existing HTML
 
-The `markup_to_gomb` sub-package converts an HTML string into the equivalent gomb
+The `tools/markup_to_gomb` package converts an HTML string into the equivalent gomb
 Go code. Useful for migrating existing templates or pasting in HTML from a
 design tool.
 
 ```go
-import "github.com/ernlel/gomb/markup_to_gomb"
+import "github.com/ernlel/gomb/tools/markup_to_gomb"
 
 code, err := markup_to_gomb.GenerateGombFromMarkup(`
     <div class="card">

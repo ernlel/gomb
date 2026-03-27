@@ -1,0 +1,10 @@
+# Compiled binaries
+/htmx
+/gomb
+
+# Go test cache
+*.test
+
+# IDE
+.idea/
+.vscode/
