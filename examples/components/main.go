@@ -9,6 +9,7 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	page := gomb.E("html").A("lang", "en").C(
 		gomb.E("head").C(
 			gomb.E("title").T("Gomb Example"),
