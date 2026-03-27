@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ernlel/gomb/markup_to_gomb"
+	"github.com/ernlel/gomb/tools/markup_to_gomb"
 )
 
 func main() {
