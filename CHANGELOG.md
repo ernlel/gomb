@@ -5,7 +5,7 @@ All notable changes to gomb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] — 2026-07-07
 
 ### Added
 - `Classes(...names)` — space-join class names, skipping empties, for safe conditional CSS.
@@ -44,3 +44,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.T()`, `.A()`, `Txt()` now HTML-escape all values — XSS-safe by default.
 - `<script>` and `<style>` text content is never entity-encoded.
 - `Raw()` provides explicit opt-in for unescaped content.
+
+[1.0.0]: https://github.com/ernlel/gomb/releases/tag/v1.0.0
