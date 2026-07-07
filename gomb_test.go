@@ -240,3 +240,240 @@ func TestNestedElements(t *testing.T) {
 	assertContains(t, out, "<h1>")
 	assertContains(t, out, "Hello")
 }
+
+// ── Render nil writer ────────────────────────────────────────────────────────
+
+func TestRenderNilWriter(t *testing.T) {
+	err := gomb.E("p").T("hi").Render(nil)
+	if err == nil {
+		t.Error("Render with nil writer should return an error")
+	}
+}
+
+// ── Classes ──────────────────────────────────────────────────────────────────
+
+func TestClassesBasic(t *testing.T) {
+	s := gomb.Classes("foo", "bar", "baz")
+	if s != "foo bar baz" {
+		t.Errorf("expected 'foo bar baz', got %q", s)
+	}
+}
+
+func TestClassesSkipsEmpty(t *testing.T) {
+	s := gomb.Classes("foo", "", "bar", "", "baz")
+	if s != "foo bar baz" {
+		t.Errorf("expected 'foo bar baz', got %q", s)
+	}
+}
+
+func TestClassesSingleArg(t *testing.T) {
+	s := gomb.Classes("only")
+	if s != "only" {
+		t.Errorf("expected 'only', got %q", s)
+	}
+}
+
+func TestClassesAllEmpty(t *testing.T) {
+	s := gomb.Classes("", "", "")
+	if s != "" {
+		t.Errorf("expected empty string, got %q", s)
+	}
+}
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+func TestData(t *testing.T) {
+	out := gomb.E("div").Data("count", "0").Data("user", "42").ToString()
+	assertContains(t, out, `data-count="0"`)
+	assertContains(t, out, `data-user="42"`)
+}
+
+// ── Style ────────────────────────────────────────────────────────────────────
+
+func TestStyle(t *testing.T) {
+	out := gomb.E("div").Style("color: red; font-weight: bold").ToString()
+	assertContains(t, out, `style="color: red; font-weight: bold"`)
+}
+
+// ── When ─────────────────────────────────────────────────────────────────────
+
+func TestWhenTrue(t *testing.T) {
+	called := false
+	out := gomb.E("div").C(gomb.When(true, func() gomb.Element {
+		called = true
+		return gomb.E("span").T("yes")
+	})).ToString()
+	if !called {
+		t.Error("When with true condition should call fn")
+	}
+	assertContains(t, out, "yes")
+}
+
+func TestWhenFalse(t *testing.T) {
+	called := false
+	out := gomb.E("div").C(gomb.When(false, func() gomb.Element {
+		called = true
+		return gomb.E("span").T("yes")
+	})).ToString()
+	if called {
+		t.Error("When with false condition should NOT call fn")
+	}
+	assertNotContains(t, out, "yes")
+}
+
+func TestAttributeOverwrite(t *testing.T) {
+	out := gomb.E("div").A("class", "a").A("class", "b").ToString()
+	if strings.Count(out, `class="`) != 1 {
+		t.Errorf("overwrite should produce exactly one class attr, got: %q", out)
+	}
+	if !strings.Contains(out, `class="b"`) {
+		t.Errorf("last write should win, got: %q", out)
+	}
+}
+
+func TestTextAndChildren(t *testing.T) {
+	out := gomb.E("div").T("before").C(gomb.E("span").T("child")).ToString()
+	assertContains(t, out, "before")
+	assertContains(t, out, "child")
+}
+
+func TestCNoArgs(t *testing.T) {
+	out := gomb.E("div").C().ToString()
+	assertContains(t, out, "<div>")
+	assertContains(t, out, "</div>")
+}
+
+func TestRawEmpty(t *testing.T) {
+	out := gomb.Raw("").ToString()
+	if strings.TrimSpace(out) != "" {
+		t.Errorf("empty Raw should render nothing, got: %q", out)
+	}
+}
+
+// ── Attrs / NS / With ────────────────────────────────────────────────────────
+
+func TestAttrs(t *testing.T) {
+	out := gomb.E("div").Attrs(
+		gomb.Attr{"class", "container"},
+		gomb.Attr{"id", "main"},
+	).ToString()
+	assertContains(t, out, `class="container"`)
+	assertContains(t, out, `id="main"`)
+}
+
+func TestAttrsEmpty(t *testing.T) {
+	out := gomb.E("div").Attrs().ToString()
+	assertContains(t, out, "<div>")
+	assertContains(t, out, "</div>")
+}
+
+func TestNS(t *testing.T) {
+	hx := gomb.NS("hx-")
+	out := gomb.E("button").Attrs(
+		hx("swap", "outerHTML"),
+		hx("target", "#result"),
+		hx("get", "/api/data"),
+	).ToString()
+	assertContains(t, out, `hx-swap="outerHTML"`)
+	assertContains(t, out, `hx-target="#result"`)
+	assertContains(t, out, `hx-get="/api/data"`)
+}
+
+func TestNSDataPrefix(t *testing.T) {
+	data := gomb.NS("data-")
+	out := gomb.E("li").Attrs(
+		data("user", "42"),
+		data("role", "admin"),
+	).ToString()
+	assertContains(t, out, `data-user="42"`)
+	assertContains(t, out, `data-role="admin"`)
+}
+
+func TestNSMixedWithA(t *testing.T) {
+	hx := gomb.NS("hx-")
+	out := gomb.E("button").
+		A("class", "btn").
+		Attrs(hx("swap", "outerHTML"), hx("target", "#result")).
+		ToString()
+	assertContains(t, out, `class="btn"`)
+	assertContains(t, out, `hx-swap="outerHTML"`)
+	assertContains(t, out, `hx-target="#result"`)
+}
+
+func TestWith(t *testing.T) {
+	btn := func(e gomb.Element) gomb.Element {
+		return e.A("type", "submit").A("class", "btn")
+	}
+	out := gomb.E("button").T("Save").With(btn).ToString()
+	assertContains(t, out, `type="submit"`)
+	assertContains(t, out, `class="btn"`)
+	assertContains(t, out, "Save")
+}
+
+func TestWithMultiple(t *testing.T) {
+	setType := func(e gomb.Element) gomb.Element { return e.A("type", "text") }
+	addClasses := func(e gomb.Element) gomb.Element { return e.A("class", "input") }
+	out := gomb.E("input").With(setType, addClasses).ToString()
+	assertContains(t, out, `type="text"`)
+	assertContains(t, out, `class="input"`)
+}
+
+func TestWithNoArgs(t *testing.T) {
+	out := gomb.E("p").T("hi").With().ToString()
+	assertContains(t, out, "hi")
+}
+
+// ── aliases ──────────────────────────────────────────────────────────────────
+
+func TestElAlias(t *testing.T) {
+	a := gomb.E("div").A("class", "test").T("hello").ToString()
+	b := gomb.El("div").A("class", "test").T("hello").ToString()
+	if a != b {
+		t.Errorf("E and El should produce identical output:\nE:\n%s\nEl:\n%s", a, b)
+	}
+}
+
+func TestAttrAlias(t *testing.T) {
+	a := gomb.E("div").A("class", "test").ToString()
+	b := gomb.E("div").Attr("class", "test").ToString()
+	if a != b {
+		t.Errorf("A and Attr should produce identical output:\nA:\n%s\nAttr:\n%s", a, b)
+	}
+}
+
+func TestTextAlias(t *testing.T) {
+	a := gomb.E("p").T("hello").ToString()
+	b := gomb.E("p").Text("hello").ToString()
+	if a != b {
+		t.Errorf("T and Text should produce identical output:\nT:\n%s\nText:\n%s", a, b)
+	}
+}
+
+func TestChildrenAlias(t *testing.T) {
+	a := gomb.E("ul").C(gomb.E("li").T("one")).ToString()
+	b := gomb.E("ul").Children(gomb.E("li").T("one")).ToString()
+	if a != b {
+		t.Errorf("C and Children should produce identical output:\nC:\n%s\nChildren:\n%s", a, b)
+	}
+}
+
+func TestAsAlias(t *testing.T) {
+	a := gomb.E("div").Attrs(gomb.Attr{"class", "a"}, gomb.Attr{"id", "b"}).ToString()
+	b := gomb.E("div").As(gomb.Attr{"class", "a"}, gomb.Attr{"id", "b"}).ToString()
+	if a != b {
+		t.Errorf("Attrs and As should produce identical output:\nAttrs:\n%s\nAs:\n%s", a, b)
+	}
+}
+
+// ── Txt ──────────────────────────────────────────────────────────────────────
+
+func TestTxt(t *testing.T) {
+	out := gomb.Txt("hello").ToString()
+	assertContains(t, out, "hello")
+}
+
+func TestTxtEscaped(t *testing.T) {
+	out := gomb.Txt(`<b>`).ToString()
+	assertNotContains(t, out, "<b>")
+	assertContains(t, out, "&lt;b&gt;")
+}

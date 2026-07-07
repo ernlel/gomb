@@ -1,9 +1,16 @@
 # Compiled binaries
-/htmx
 /gomb
 
 # Go test cache
 *.test
+
+# Compiled binaries and screenshots in examples
+examples/**/htmx
+examples/**/alpinejs
+examples/**/caching
+examples/**/test1
+examples/**/html-elements
+examples/**/screenshot.png
 
 # IDE
 .idea/
