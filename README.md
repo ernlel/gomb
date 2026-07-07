@@ -1,5 +1,9 @@
 # gomb — Go Markup Builder
 
+[![Go Version](https://img.shields.io/badge/Go-1.23%2B-00ADD8)](https://go.dev)
+[![Test](https://github.com/ernlel/gomb/actions/workflows/test.yml/badge.svg)](https://github.com/ernlel/gomb/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+
 `gomb` is a small Go library for building HTML programmatically using a fluent,
 type-safe API. There are no templates, no string concatenation, and no reflection —
 just regular Go functions and method chaining.
@@ -860,5 +864,5 @@ func AboutPage() Element    { return Layout("About", aboutContent()) }
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE). Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
