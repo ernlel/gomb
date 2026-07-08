@@ -367,20 +367,20 @@ E("div").Style("display: flex; align-items: center; gap: 0.5rem")
 
 ## Element transformers
 
-`.With()` accepts one or more `func(Element) Element` and applies them in order.
+`.With()` accepts one or more `func(*Element)` transformers and applies them in order.
 Package common attribute patterns as reusable, composable modifiers:
 
 ```go
 // Transformer factories — functions that return transformers
-btn := func(e Element) Element {
-    return e.A("type", "submit").A("class", Classes("btn", "rounded"))
+btn := func(e *Element) {
+    e.A("type", "submit").A("class", Classes("btn", "rounded"))
 }
-primaryBtn := func(e Element) Element {
-    return e.A("class", Classes("btn", "btn-primary", "rounded"))
+primaryBtn := func(e *Element) {
+    e.A("class", Classes("btn", "btn-primary", "rounded"))
 }
-withTooltip := func(text string) func(Element) Element {
-    return func(e Element) Element {
-        return e.Data("tooltip", text)
+withTooltip := func(text string) func(*Element) {
+    return func(e *Element) {
+        e.Data("tooltip", text)
     }
 }
 
@@ -389,8 +389,8 @@ E("button").T("Save").With(btn, withTooltip("Save your changes"))
 E("button").T("Delete").With(primaryBtn, withTooltip("Permanently delete"))
 
 // Transformers can also modify children:
-withIcon := func(e Element) Element {
-    return e.C(E("span").A("class", "icon").T("★"))
+withIcon := func(e *Element) {
+    e.C(E("span").A("class", "icon").T("★"))
 }
 E("a").A("href", "/star").T("Favorite").With(withIcon)
 ```
@@ -582,8 +582,7 @@ and live search examples.
 
 ## Caching
 
-Because `Element` is an immutable value type, rendered HTML strings can be stored
-and replayed freely.
+Rendered HTML strings can be cached and replayed freely.
 
 **Static component (sync.Once)**
 
@@ -692,8 +691,8 @@ cls := el.Attributes["class"] // "card"
 txt := el.ChildNodes[0].TextContent  // "Title"
 
 // Walk the tree
-var walk func(e Element)
-walk = func(e Element) {
+var walk func(e *Element)
+walk = func(e *Element) {
     fmt.Println(e.Tag)
     for _, c := range e.ChildNodes {
         walk(c)
@@ -702,8 +701,8 @@ walk = func(e Element) {
 walk(el)
 ```
 
-The mutable builder methods (`A`, `C`, `T`, etc.) always return a **copy** —
-inspecting a rendered element won't affect anything downstream.
+Builder methods (`A`, `C`, `T`, etc.) mutate the element in place and return
+the same pointer for chaining — read any field at any time.
 
 ## Code style guide
 
@@ -789,13 +788,13 @@ func liveSearch() Element {
 
 ### Parameterize transformers
 
-`func(Element) Element` is the signature — wrap in a closure to accept
+`func(*Element)` is the signature — wrap in a closure to accept
 configuration:
 
 ```go
-func sizedText(size string) func(Element) Element {
-    return func(e Element) Element {
-        return e.A("class", Classes("text-"+size))
+func sizedText(size string) func(*Element) {
+    return func(e *Element) {
+        e.A("class", Classes("text-"+size))
     }
 }
 
