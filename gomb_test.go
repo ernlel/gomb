@@ -163,9 +163,12 @@ func TestMapEmpty(t *testing.T) {
 
 func TestRender(t *testing.T) {
 	var buf bytes.Buffer
-	err := gomb.E("p").T("hi").Render(&buf)
+	n, err := gomb.E("p").T("hi").Render(&buf)
 	if err != nil {
 		t.Fatalf("Render returned error: %v", err)
+	}
+	if n == 0 {
+		t.Error("Render should return non-zero byte count")
 	}
 	assertContains(t, buf.String(), "<p>")
 	assertContains(t, buf.String(), "hi")
@@ -187,9 +190,15 @@ func TestNestedElements(t *testing.T) {
 }
 
 func TestRenderNilWriter(t *testing.T) {
-	err := gomb.E("p").T("hi").Render(nil)
+	n, err := gomb.E("p").T("hi").Render(nil)
 	if err == nil {
 		t.Error("Render with nil writer should return an error")
+	}
+	if err != gomb.ErrNilWriter {
+		t.Errorf("expected ErrNilWriter, got %v", err)
+	}
+	if n != 0 {
+		t.Errorf("expected 0 bytes written, got %d", n)
 	}
 }
 
@@ -405,4 +414,110 @@ func TestTxtEscaped(t *testing.T) {
 	out := gomb.Txt(`<b>`).ToString()
 	assertNotContains(t, out, "<b>")
 	assertContains(t, out, "&lt;b&gt;")
+}
+
+func TestClassMethod(t *testing.T) {
+	out := gomb.E("div").Class("foo", "bar").ToString()
+	assertContains(t, out, `class="foo bar"`)
+}
+
+func TestClassMethodSkipsEmpty(t *testing.T) {
+	out := gomb.E("div").Class("foo", "", "bar").ToString()
+	assertContains(t, out, `class="foo bar"`)
+}
+
+func TestIdMethod(t *testing.T) {
+	out := gomb.E("div").Id("main").ToString()
+	assertContains(t, out, `id="main"`)
+}
+
+func TestWhenMethodTrue(t *testing.T) {
+	out := gomb.E("input").A("type", "checkbox").When(true, func(e *gomb.Element) {
+		e.A("checked", "")
+	}).ToString()
+	assertContains(t, out, "checked")
+}
+
+func TestWhenMethodFalse(t *testing.T) {
+	out := gomb.E("input").A("type", "checkbox").When(false, func(e *gomb.Element) {
+		e.A("checked", "")
+	}).ToString()
+	assertNotContains(t, out, "checked")
+}
+
+func TestClone(t *testing.T) {
+	base := gomb.E("input").A("class", "input").A("type", "text")
+	clone := base.Clone()
+	clone.A("name", "username")
+
+	baseOut := base.ToString()
+	cloneOut := clone.ToString()
+
+	assertContains(t, cloneOut, `name="username"`)
+	assertNotContains(t, baseOut, `name="username"`)
+	assertContains(t, baseOut, `class="input"`)
+	assertContains(t, cloneOut, `class="input"`)
+}
+
+func TestCloneNil(t *testing.T) {
+	var el *gomb.Element
+	if el.Clone() != nil {
+		t.Error("Clone of nil should return nil")
+	}
+}
+
+func TestCloneAttributesIndependent(t *testing.T) {
+	base := gomb.E("div").A("class", "a")
+	clone := base.Clone()
+	clone.A("class", "b")
+
+	if base.Attributes["class"] != "a" {
+		t.Errorf("base should still have class 'a', got %q", base.Attributes["class"])
+	}
+	if clone.Attributes["class"] != "b" {
+		t.Errorf("clone should have class 'b', got %q", clone.Attributes["class"])
+	}
+}
+
+func TestAVariadic(t *testing.T) {
+	out := gomb.E("div").A("class", "container", "id", "main", "data-x", "1").ToString()
+	assertContains(t, out, `class="container"`)
+	assertContains(t, out, `id="main"`)
+	assertContains(t, out, `data-x="1"`)
+}
+
+func TestAVariadicOdd(t *testing.T) {
+	out := gomb.E("div").A("class", "a", "orphan").ToString()
+	assertContains(t, out, `class="a"`)
+	assertNotContains(t, out, "orphan")
+}
+
+func TestAVariadicEmpty(t *testing.T) {
+	out := gomb.E("div").A().ToString()
+	assertContains(t, out, "<div>")
+}
+
+func TestCloneWithChildren(t *testing.T) {
+	base := gomb.E("div").C(gomb.E("span").T("child"))
+	clone := base.Clone()
+
+	if len(clone.ChildNodes) != 1 {
+		t.Fatalf("expected 1 child, got %d", len(clone.ChildNodes))
+	}
+	if clone.ChildNodes[0] != base.ChildNodes[0] {
+		t.Error("Clone should share ChildNodes references (shallow copy)")
+	}
+}
+
+func TestRenderByteCount(t *testing.T) {
+	var buf bytes.Buffer
+	el := gomb.E("p").T("hi")
+	expected := el.ToString()
+	n, err := el.Render(&buf)
+	if err != nil {
+		t.Fatalf("Render returned error: %v", err)
+	}
+	if int(n) != len(expected) {
+		t.Errorf("expected %d bytes, got %d", len(expected), n)
+	}
 }

@@ -5,6 +5,22 @@ All notable changes to gomb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-07-08
+
+### Added
+- `.Class(names ...string)` — shorthand for `.A("class", Classes(...))`.
+- `.Id(id string)` — shorthand for `.A("id", id)`.
+- `.When(cond bool, fn func(*Element))` — chainable conditional transform method. Unlike package-level `When()`, this stays inside the builder chain.
+- `.Clone()` — shallow copy with independent Attributes map. ChildNodes slice references are shared.
+- `ErrNilWriter` — exported sentinel error returned by `Render(nil)` instead of `io.ErrShortWrite`.
+
+### Changed
+- `A(pairs ...string)` — now accepts variadic key-value pairs. Backward-compatible: existing `.A(k, v)` calls work unchanged. Odd trailing arguments are silently ignored.
+- `Render(w)` — now returns `(int64, error)` instead of just `error`. Useful for logging bytes written or checking write errors.
+
+### Fixed
+- `Render(nil)` returns `ErrNilWriter` (identifiable sentinel) instead of `io.ErrShortWrite`.
+
 ## [1.1.0] — 2026-07-08
 
 ### Changed
@@ -53,5 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<script>` and `<style>` text content is never entity-encoded.
 - `Raw()` provides explicit opt-in for unescaped content.
 
+[1.2.0]: https://github.com/ernlel/gomb/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ernlel/gomb/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ernlel/gomb/releases/tag/v1.0.0

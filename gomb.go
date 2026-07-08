@@ -15,11 +15,15 @@
 package gomb
 
 import (
+	"errors"
 	"html"
 	"io"
 	"sort"
 	"strings"
 )
+
+// ErrNilWriter is returned by Render when called with a nil io.Writer.
+var ErrNilWriter = errors.New("gomb: Render called with nil writer")
 
 // Element represents an HTML element.
 type Element struct {
@@ -59,18 +63,21 @@ func Fragment(elements ...*Element) *Element {
 	return E("").C(elements...)
 }
 
-// A sets (or overwrites) an attribute. Returns the element for chaining.
-func (e *Element) A(key, value string) *Element {
+// A sets attributes from key-value pairs. Returns the element for chaining.
+// Odd trailing arguments are silently ignored.
+func (e *Element) A(pairs ...string) *Element {
 	if e.Attributes == nil {
 		e.Attributes = make(map[string]string)
 	}
-	e.Attributes[key] = value
+	for i := 0; i+1 < len(pairs); i += 2 {
+		e.Attributes[pairs[i]] = pairs[i+1]
+	}
 	return e
 }
 
 // Attr is an alias for A.
-func (e *Element) Attr(key, value string) *Element {
-	return e.A(key, value)
+func (e *Element) Attr(pairs ...string) *Element {
+	return e.A(pairs...)
 }
 
 // T sets text content. Returns the element for chaining.
@@ -111,15 +118,16 @@ func (e *Element) ToString() string {
 }
 
 // Render writes the HTML representation of the element to w.
-func (e *Element) Render(w io.Writer) error {
+// Returns the number of bytes written and any error encountered.
+func (e *Element) Render(w io.Writer) (int64, error) {
 	if e == nil {
-		return nil
+		return 0, nil
 	}
 	if w == nil {
-		return io.ErrShortWrite
+		return 0, ErrNilWriter
 	}
-	_, err := io.WriteString(w, e.ToString())
-	return err
+	n, err := io.WriteString(w, e.ToString())
+	return int64(n), err
 }
 
 // Classes returns a space-joined string from the given class names, skipping empty strings.
@@ -144,6 +152,49 @@ func (e *Element) Data(key, value string) *Element {
 // Style is a shorthand for the style attribute.
 func (e *Element) Style(css string) *Element {
 	return e.A("style", css)
+}
+
+// Class is a shorthand for setting the class attribute.
+// It joins the given names using Classes() and sets "class".
+func (e *Element) Class(names ...string) *Element {
+	return e.A("class", Classes(names...))
+}
+
+// Id is a shorthand for setting the id attribute.
+func (e *Element) Id(id string) *Element {
+	return e.A("id", id)
+}
+
+// When applies fn to the element when cond is true. Returns the element for chaining.
+func (e *Element) When(cond bool, fn func(*Element)) *Element {
+	if cond {
+		fn(e)
+	}
+	return e
+}
+
+// Clone returns a shallow copy of the element.
+// The Attributes map is copied, but ChildNodes slice references are shared.
+func (e *Element) Clone() *Element {
+	if e == nil {
+		return nil
+	}
+	clone := &Element{
+		Tag:         e.Tag,
+		TextContent: e.TextContent,
+		rawText:     e.rawText,
+	}
+	if e.Attributes != nil {
+		clone.Attributes = make(map[string]string, len(e.Attributes))
+		for k, v := range e.Attributes {
+			clone.Attributes[k] = v
+		}
+	}
+	if len(e.ChildNodes) > 0 {
+		clone.ChildNodes = make([]*Element, len(e.ChildNodes))
+		copy(clone.ChildNodes, e.ChildNodes)
+	}
+	return clone
 }
 
 // Attr is a key-value attribute pair.

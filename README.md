@@ -87,7 +87,7 @@ page := Html(
 | Short | Long |
 |-------|------|
 | `E(tag)` | `El(tag)` |
-| `.A(k, v)` | `.Attr(k, v)` |
+| `.A(pairs...)` | `.Attr(pairs...)` |
 | `.T(text)` | `.Text(text)` |
 | `.C(elems...)` | `.Children(elems...)` |
 
@@ -164,18 +164,22 @@ Regenerate with: `go run ./cmd/gen-html`
 | Function / method | Description |
 |---|---|
 | `E(tag)` / `El(tag)` | Create an element |
-| `.A(key, value)` / `.Attr(key, value)` | Set an attribute (HTML-escaped) |
+| `.A(pairs...)` / `.Attr(pairs...)` | Set attributes from key-value pairs (HTML-escaped) |
 | `.T(text)` / `.Text(text)` | Set text content (HTML-escaped) |
 | `.C(children...)` / `.Children(children...)` | Append child elements |
+| `.Class(names...)` | Shorthand for the `class` attribute (uses `Classes()`) |
+| `.Id(id)` | Shorthand for the `id` attribute |
+| `.Clone()` | Shallow copy — independent Attributes map |
+| `.When(cond, fn)` | Apply `fn` to element only when `cond` is true |
 | `.ToString()` | Render to an HTML string |
-| `.Render(w)` | Write HTML to an `io.Writer` |
+| `.Render(w)` | Write HTML to an `io.Writer`, returns `(int64, error)` |
 | `Raw(html)` | Insert pre-rendered HTML verbatim |
 | `Fragment(els...)` | Tag-less wrapper (no extra element) |
 | `None` | Empty element — renders nothing |
 | `If(cond, el)` | Conditionally include an element |
 | `IfElse(cond, a, b)` | Choose between two elements |
 | `When(cond, fn)` | Lazy conditional — `fn` only called if `cond` is true |
-| `Map(slice, fn)` | Transform a slice into `[]Element` |
+| `Map(slice, fn)` | Transform a slice into `[]*Element` |
 | `Classes(...names)` | Space-join class names, skipping empties |
 | `.Data(key, value)` | Shorthand for `data-*` attributes |
 | `.Style(css)` | Shorthand for the `style` attribute |
@@ -228,7 +232,7 @@ E("div").C(
 )
 
 // Fragment emits the children directly — no wrapper tag:
-func definition(term, desc string) gomb.Element {
+func definition(term, desc string) *gomb.Element {
     return Fragment(
         E("dt").T(term),
         E("dd").T(desc),
@@ -264,8 +268,8 @@ Another common use: returning a group of table cells or list items from a
 helper without wrapping them in an extra element:
 
 ```go
-func navLinks(links []Link) gomb.Element {
-    items := Map(links, func(l Link) gomb.Element {
+func navLinks(links []Link) *gomb.Element {
+    items := Map(links, func(l Link) *gomb.Element {
         return E("li").C(E("a").A("href", l.URL).T(l.Label))
     })
     return Fragment(items...)   // no wrapping <ul>/<div>
@@ -341,21 +345,39 @@ E("input").
 
 ## CSS helpers
 
+### .Class()
+
+`.Class(names...)` is a shorthand for `.A("class", Classes(names...))`:
+
+```go
+E("button").Class(
+    "btn",
+    IfElse(isPrimary, "btn-primary", "btn-secondary"),
+    IfElse(isLarge, "text-lg", "text-sm"),
+)
+// → <button class="btn btn-primary text-lg">
+```
+
 ### Classes()
 
-`Classes()` joins class names into a single string, skipping empty strings. This makes
-conditional CSS classes ergonomic:
+`Classes()` joins class names into a single string, skipping empty strings. Useful when
+you need the string value outside of `.Class()`:
 
 ```go
 E("button").A("class", Classes(
     "btn",
     IfElse(isPrimary, "btn-primary", "btn-secondary"),
-    IfElse(isLarge, "text-lg", "text-sm"),
     IfElse(isDisabled, "opacity-50 cursor-not-allowed", ""),
 ))
-// → <button class="btn btn-primary text-lg opacity-50 cursor-not-allowed">
-// or (depending on conditions):
-// → <button class="btn btn-secondary text-sm">
+```
+
+### .Id()
+
+`.Id(id)` is a shorthand for `.A("id", id)`:
+
+```go
+E("div").Id("main").Class("container")
+// → <div class="container" id="main">
 ```
 
 ### Style()
@@ -398,32 +420,60 @@ E("a").A("href", "/star").T("Favorite").With(withIcon)
 Transformers are just functions — they're testable, composable, and can be defined
 in packages alongside your components.
 
+## Conditional chaining
+
+`.When(cond, fn)` applies `fn` to the element only when `cond` is true. Unlike the
+package-level `When()` (which lazily builds elements for `.C()`), this method stays
+inside the chain:
+
+```go
+E("input").
+    A("type", "checkbox").
+    When(checked, func(e *Element) { e.A("checked", "") }).
+    When(disabled, func(e *Element) { e.A("disabled", "") })
+```
+
+## Cloning elements
+
+`.Clone()` returns a shallow copy — the Attributes map is independent, but ChildNodes
+slice references are shared. Use it to build a base template and stamp out variants:
+
+```go
+baseInput := E("input").Class("input").A("type", "text")
+
+nameInput := baseInput.Clone().A("name", "name").Id("name-field")
+emailInput := baseInput.Clone().A("name", "email").Id("email-field")
+// baseInput is unchanged
+```
+
 ## Rendering
 
-`Render(w)` writes directly to any `io.Writer`, including `http.ResponseWriter`:
+`Render(w)` writes directly to any `io.Writer` and returns `(int64, error)` —
+useful for logging bytes written or checking write errors:
 
 ```go
 func handler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/html; charset=utf-8")
-    E("p").T("Hello").Render(w)
+    n, err := E("p").T("Hello").Render(w)
+    log.Printf("wrote %d bytes", n)
 }
 ```
 
 ## Components
 
-Components are Go functions that return `Element`. Any parameters, loops, and
+Components are Go functions that return `*Element`. Any parameters, loops, and
 conditions are just Go:
 
 ```go
-func Button(label string, primary bool) Element {
+func Button(label string, primary bool) *Element {
     return E("button").
         A("class", Classes("btn", IfElse(primary, "btn-primary", ""))).
         A("type", "submit").
         T(label)
 }
 
-func NavBar(links []NavLink) Element {
-    items := Map(links, func(l NavLink) Element {
+func NavBar(links []NavLink) *Element {
+    items := Map(links, func(l NavLink) *Element {
         return E("li").C(E("a").A("href", l.URL).T(l.Label))
     })
     return E("nav").C(E("ul").C(items...))
@@ -435,7 +485,7 @@ func NavBar(links []NavLink) Element {
 Wrap content in a layout function:
 
 ```go
-func Layout(title string, body gomb.Element) gomb.Element {
+func Layout(title string, body *gomb.Element) *gomb.Element {
     return E("html").A("lang", "en").C(
         E("head").C(
             E("meta").A("charset", "UTF-8"),
@@ -446,7 +496,7 @@ func Layout(title string, body gomb.Element) gomb.Element {
     )
 }
 
-func IndexPage() gomb.Element {
+func IndexPage() *gomb.Element {
     return Layout("Home", E("main").C(
         E("h1").T("Welcome"),
         E("p").T("This is the home page."),
@@ -470,7 +520,7 @@ IfElse(user.LoggedIn,
 )
 
 // Go if/else inside a component function
-func greeting(user *User) gomb.Element {
+func greeting(user *User) *gomb.Element {
     if user == nil {
         return E("p").T("Hello, guest!")
     }
@@ -479,14 +529,14 @@ func greeting(user *User) gomb.Element {
 
 // Map — render a list from a slice
 names := []string{"Alice", "Bob", "Carol"}
-E("ul").C(Map(names, func(name string) gomb.Element {
+E("ul").C(Map(names, func(name string) *gomb.Element {
     return E("li").T(name)
 })...)
 
 // When — lazy conditional: fn is only called if the condition is true
 // Use When instead of If when the element is expensive or has side-effects
 E("ul").C(
-    When(user != nil, func() Element {
+    When(user != nil, func() *Element {
         // This closure only runs when user != nil
         return E("li").C(E("a").A("href", "/profile").T(user.Name))
     }),
@@ -605,7 +655,7 @@ var cache sync.Map
 
 type entry struct { html string; exp time.Time }
 
-func Cached(key string, ttl time.Duration, build func() gomb.Element) string {
+func Cached(key string, ttl time.Duration, build func() *gomb.Element) string {
     if v, ok := cache.Load(key); ok {
         if e := v.(entry); time.Now().Before(e.exp) {
             return e.html
@@ -722,7 +772,7 @@ The long form (`El`, `Attr`, `Text`, `Children`) is self-documenting — use it 
 public packages, shared components, and code that non-Go developers might read:
 
 ```go
-func SiteLayout(title string, body Element) Element {
+func SiteLayout(title string, body *Element) *Element {
     return El("html").Attr("lang", "en").Children(
         El("head").Children(El("title").Text(title)),
         El("body").Children(Header(), body, Footer()),
@@ -748,20 +798,20 @@ E("button").A("type","submit").A("class",Classes("btn","btn-primary")).Data("act
 
 ### Components are functions
 
-Extract anything used more than once into a function. Return `Element`, accept any
+Extract anything used more than once into a function. Return `*Element`, accept any
 parameters you need:
 
 ```go
-func Card(title, body string) Element {
+func Card(title, body string) *Element {
     return E("div").A("class", "card").C(
         E("h3").A("class", "card-title").T(title),
         E("p").A("class", "card-body").T(body),
     )
 }
 
-func CardList(items []CardData) Element {
+func CardList(items []CardData) *Element {
     return E("div").A("class", "card-list").C(
-        Map(items, func(d CardData) Element {
+        Map(items, func(d CardData) *Element {
             return Card(d.Title, d.Body)
         })...,
     )
@@ -776,7 +826,7 @@ function level:
 ```go
 var hx = gomb.NS("hx-")
 
-func liveSearch() Element {
+func liveSearch() *Element {
     return E("input").As(
         hx("get", "/search"),
         hx("trigger", "keyup changed delay:300ms"),
@@ -814,7 +864,7 @@ E("p").T("Body").With(sizedText("base"))
 
 ```go
 // Go if/else — multiple branches or complex logic
-func StatusBadge(status string) Element {
+func StatusBadge(status string) *Element {
     var color string
     switch status {
     case "active":   color = "bg-green-500"
@@ -843,7 +893,7 @@ E("button").A("class", Classes(
 A layout function accepts `title` and `body`, returns the full page:
 
 ```go
-func Layout(title string, body Element) Element {
+func Layout(title string, body *Element) *Element {
     return E("html").A("lang", "en").C(
         E("head").C(
             E("meta").A("charset", "UTF-8"),
@@ -857,8 +907,8 @@ func Layout(title string, body Element) Element {
 Every page becomes one line:
 
 ```go
-func HomePage() Element     { return Layout("Home", homeContent()) }
-func AboutPage() Element    { return Layout("About", aboutContent()) }
+func HomePage() *Element     { return Layout("Home", homeContent()) }
+func AboutPage() *Element    { return Layout("About", aboutContent()) }
 ```
 
 ## License
