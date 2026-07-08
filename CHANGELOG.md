@@ -5,7 +5,7 @@ All notable changes to gomb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] — 2026-07-08
+## [1.1.0] — 2026-07-08
 
 ### Changed
 - **Breaking:** Switched from value receivers to pointer receivers (`*Element`). `E()`, `A()`, `T()`, `C()` and all helpers now return `*Element`. Methods mutate in place and return the same pointer for chaining — no more accidental copy discards.
@@ -53,5 +53,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<script>` and `<style>` text content is never entity-encoded.
 - `Raw()` provides explicit opt-in for unescaped content.
 
-[2.0.0]: https://github.com/ernlel/gomb/releases/tag/v2.0.0
+[1.1.0]: https://github.com/ernlel/gomb/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ernlel/gomb/releases/tag/v1.0.0
