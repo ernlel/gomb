@@ -91,7 +91,7 @@ page := Html(
 | `.T(text)` | `.Text(text)` |
 | `.C(elems...)` | `.Children(elems...)` |
 
-### Named element constructors
+## Named element constructors
 
 For maximum IDE autocomplete and compile-time safety, the `html` sub-package
 provides named constructor functions for every HTML element. Import alongside
