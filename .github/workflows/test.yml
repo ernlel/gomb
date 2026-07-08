@@ -31,6 +31,10 @@ jobs:
         working-directory: pkg/markup_to_gomb
         run: go test ./... -race -count=1
 
+      - name: Build and run gomblint
+        working-directory: cmd/gomblint
+        run: go build -o gomblint . && ./gomblint ../../...
+
   lint:
     runs-on: ubuntu-latest
     steps:

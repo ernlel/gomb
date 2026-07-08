@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Render()` no longer panics on nil `io.Writer` — returns an error.
 - `Paragraph` example component: fragile `Children = append` replaced with `Map` + `Fragment`.
 
+### Added
+- `cmd/gomblint` — static analyzer that catches ignored return values from gomb builder methods (`body.C(form)` instead of `body = body.C(form)`).
+- Prominent warning in README about immutable return values.
+
 ### Security
 - `.T()`, `.A()`, `Txt()` now HTML-escape all values — XSS-safe by default.
 - `<script>` and `<style>` text content is never entity-encoded.
