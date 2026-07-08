@@ -38,8 +38,8 @@ var nextID = 4
 // ── components ───────────────────────────────────────────────────────────────
 
 // taskRow renders a single <li> for the task list.
-func taskRow(t Task) Element {
-	var checkbox Element
+func taskRow(t Task) *Element {
+	var checkbox *Element
 	if t.Done {
 		checkbox = E("input").
 			A("type", "checkbox").
@@ -74,7 +74,7 @@ func taskRow(t Task) Element {
 }
 
 // taskList renders the full <ul id="task-list"> fragment.
-func taskList(ts []Task) Element {
+func taskList(ts []Task) *Element {
 	return E("ul").
 		A("id", "task-list").
 		A("class", "divide-y rounded border").
@@ -82,7 +82,7 @@ func taskList(ts []Task) Element {
 }
 
 // addForm renders the task-creation form.
-func addForm() Element {
+func addForm() *Element {
 	return E("form").
 		A("hx-post", "/tasks").
 		A("hx-target", "#task-list").
@@ -104,7 +104,7 @@ func addForm() Element {
 }
 
 // page renders the full HTML document.
-func page() Element {
+func page() *Element {
 	return E("html").A("lang", "en").C(
 		E("head").C(
 			E("meta").A("charset", "UTF-8"),

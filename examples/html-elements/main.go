@@ -17,7 +17,7 @@ import (
 
 // ── components ───────────────────────────────────────────────────────────────
 
-func NavItem(label, href string, active bool) Element {
+func NavItem(label, href string, active bool) *Element {
 	cls := "px-3 py-2 rounded text-sm font-medium"
 	if active {
 		cls += " bg-gray-900 text-white"
@@ -29,7 +29,7 @@ func NavItem(label, href string, active bool) Element {
 	)
 }
 
-func Card(title, body string) Element {
+func Card(title, body string) *Element {
 	return Div(
 		Attr{Key: "class", Value: "bg-white rounded-lg shadow p-6"},
 		H3(Txt(title), Attr{Key: "class", Value: "text-lg font-semibold mb-2"}),
@@ -37,7 +37,7 @@ func Card(title, body string) Element {
 	)
 }
 
-func StatCard(label, value string) Element {
+func StatCard(label, value string) *Element {
 	return Div(
 		Attr{Key: "class", Value: "bg-white rounded-lg shadow p-4 text-center"},
 		Div(Txt(value), Attr{Key: "class", Value: "text-3xl font-bold text-indigo-600"}),
@@ -47,7 +47,7 @@ func StatCard(label, value string) Element {
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
-func page() Element {
+func page() *Element {
 	return Html(
 		Attr{Key: "lang", Value: "en"},
 		Head(

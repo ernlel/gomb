@@ -2,7 +2,7 @@ package layout
 
 import "github.com/ernlel/gomb"
 
-func Footer() gomb.Element {
+func Footer() *gomb.Element {
 	E := gomb.E
 	return E("footer").
 		A("class", "bg-gray-800 text-white p-4").

@@ -5,7 +5,7 @@ import (
 	"github.com/ernlel/gomb/examples/layout/template/layout"
 )
 
-func AboutPage() gomb.Element {
+func AboutPage() *gomb.Element {
 	E := gomb.E
 	content := E("div").
 		A("class", "about-page container mx-auto p-4").

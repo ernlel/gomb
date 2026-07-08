@@ -5,6 +5,16 @@ All notable changes to gomb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-07-08
+
+### Changed
+- **Breaking:** Switched from value receivers to pointer receivers (`*Element`). `E()`, `A()`, `T()`, `C()` and all helpers now return `*Element`. Methods mutate in place and return the same pointer for chaining — no more accidental copy discards.
+- `If(cond, el)`, `IfElse(cond, a, b)`, `When(cond, fn)`, `Map(slice, fn)`, `Fragment(els...)` all return `*Element`.
+- `None` is now `nil` (`var None *Element`). `ToString()` and `Render()` handle nil receivers gracefully.
+- `With(fns...)` transformers now take `func(*Element)` (mutate in place).
+- `C()` skips nil children.
+- Immutability copy-on-write removed — `A()` and `C()` mutate the element directly.
+
 ## [1.0.0] — 2026-07-07
 
 ### Added
@@ -26,11 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `LICENSE` — MIT.
 
 ### Changed
-- `Attr` struct field renamed to `Attributes` (exported, non-conflicting with `.Attrs()` method).
-- `Children` field renamed to `ChildNodes` (exported, for introspection).
-- `Text` field renamed to `TextContent` (exported, for introspection).
-- `.A()` now deep-copies the attribute map (true immutability).
-- `.C()` now deep-copies the children slice (true immutability).
+- `Attr` struct field renamed to `Attributes`.
+- `Children` field renamed to `ChildNodes`.
+- `Text` field renamed to `TextContent`.
 - Attribute keys are sorted alphabetically on render (deterministic output).
 - Self-closing tag lookup changed from O(n) slice scan to O(1) map lookup.
 - Project layout: `html/` → `pkg/html/`, generators → `cmd/`, converter → `pkg/markup_to_gomb/`.
@@ -40,13 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Render()` no longer panics on nil `io.Writer` — returns an error.
 - `Paragraph` example component: fragile `Children = append` replaced with `Map` + `Fragment`.
 
-### Added
-- `cmd/gomblint` — static analyzer that catches ignored return values from gomb builder methods (`body.C(form)` instead of `body = body.C(form)`).
-- Prominent warning in README about immutable return values.
-
 ### Security
 - `.T()`, `.A()`, `Txt()` now HTML-escape all values — XSS-safe by default.
 - `<script>` and `<style>` text content is never entity-encoded.
 - `Raw()` provides explicit opt-in for unescaped content.
 
+[2.0.0]: https://github.com/ernlel/gomb/releases/tag/v2.0.0
 [1.0.0]: https://github.com/ernlel/gomb/releases/tag/v1.0.0

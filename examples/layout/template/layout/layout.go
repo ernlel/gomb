@@ -4,7 +4,7 @@ import (
 	"github.com/ernlel/gomb"
 )
 
-func Layout(content gomb.Element) gomb.Element {
+func Layout(content *gomb.Element) *gomb.Element {
 	E := gomb.E
 	page := E("html").C(
 		E("head").C(

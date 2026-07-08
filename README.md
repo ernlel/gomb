@@ -161,24 +161,6 @@ Regenerate with: `go run ./cmd/gen-html`
 
 ## Core API
 
-> **Every method returns a new `Element`.** gomb uses immutable value types —
-> `A()`, `T()`, `C()` and all helpers return a **copy**. Never discard the return value:
->
-> ```go
-> // BUG — the copy is thrown away, form is never added
-> body := E("section").A("class", "card")
-> body.C(form) // does nothing!
->
-> // CORRECT — reassign or chain
-> body = body.C(form)
-> body := E("section").A("class", "card").C(form)
-> ```
->
-> The `cmd/gomblint` checker catches this at build time. Run it in CI or locally:
-> ```
-> go run ./cmd/gomblint ./...
-> ```
-
 | Function / method | Description |
 |---|---|
 | `E(tag)` / `El(tag)` | Create an element |

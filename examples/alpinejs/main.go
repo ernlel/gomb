@@ -21,7 +21,7 @@ import (
 // ── components ───────────────────────────────────────────────────────────────
 
 // accordion renders a collapsible section using Alpine.js x-show / @click.
-func accordion(title, body string) Element {
+func accordion(title, body string) *Element {
 	return E("div").
 		A("x-data", `{"open": false}`).
 		A("class", "border rounded mb-2").
@@ -41,14 +41,14 @@ func accordion(title, body string) Element {
 }
 
 // tabPanel renders a tabbed interface.
-func tabPanel() Element {
+func tabPanel() *Element {
 	tabs := []struct{ label, content string }{
 		{"Overview", "This is the overview tab."},
 		{"Details", "Here are more details about the product."},
 		{"Reviews", "Customers love this product – 4.8 ★"},
 	}
 
-	tabButtons := Map(tabs, func(t struct{ label, content string }) Element {
+	tabButtons := Map(tabs, func(t struct{ label, content string }) *Element {
 		return E("button").
 			A("class", "px-4 py-2 text-sm font-medium").
 			A(":class", fmt.Sprintf(`active === %q ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500 hover:text-gray-700"`, t.label)).
@@ -56,7 +56,7 @@ func tabPanel() Element {
 			T(t.label)
 	})
 
-	tabContents := Map(tabs, func(t struct{ label, content string }) Element {
+	tabContents := Map(tabs, func(t struct{ label, content string }) *Element {
 		return E("div").
 			A("x-show", fmt.Sprintf(`active === %q`, t.label)).
 			A("class", "p-4 text-gray-700").
@@ -73,7 +73,7 @@ func tabPanel() Element {
 }
 
 // modal renders a dialog that can be opened/closed via Alpine state.
-func modal() Element {
+func modal() *Element {
 	return E("div").
 		A("x-data", `{"open": false}`).
 		C(
@@ -102,7 +102,7 @@ func modal() Element {
 }
 
 // counter renders a live counter using x-data and x-text.
-func counter() Element {
+func counter() *Element {
 	return E("div").
 		A("x-data", `{"count": 0}`).
 		A("class", "flex items-center gap-4").
@@ -122,7 +122,7 @@ func counter() Element {
 }
 
 // liveSearch renders a list filtered as the user types (no server round-trip).
-func liveSearch(items []string) Element {
+func liveSearch(items []string) *Element {
 	// Encode the items slice as a JS array literal for use in x-data.
 	quotedItems := make([]string, len(items))
 	for i, item := range items {
@@ -161,7 +161,7 @@ func liveSearch(items []string) Element {
 }
 
 // page assembles the full demo page.
-func page() Element {
+func page() *Element {
 	languages := []string{"Go", "TypeScript", "Rust", "Python", "Kotlin", "Swift", "Elixir", "Zig"}
 
 	return E("html").A("lang", "en").C(

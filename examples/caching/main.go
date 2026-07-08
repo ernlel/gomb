@@ -1,6 +1,6 @@
 // Package main demonstrates several caching strategies for gomb-rendered HTML.
 //
-// Because gomb.Element is an immutable value type, rendered HTML strings can be
+// Because *gomb.Element is an immutable value type, rendered HTML strings can be
 // cached freely. Three patterns are shown:
 //
 //  1. Static component cache – build once at startup with sync.Once.
@@ -61,7 +61,7 @@ var fragmentCache sync.Map
 
 // cachedFragment returns the cached HTML for key if still valid, otherwise calls
 // build(), caches the result for ttl, and returns it.
-func cachedFragment(key string, ttl time.Duration, build func() Element) string {
+func cachedFragment(key string, ttl time.Duration, build func() *Element) string {
 	if v, ok := fragmentCache.Load(key); ok {
 		e := v.(cacheEntry)
 		if time.Now().Before(e.expires) {
@@ -76,7 +76,7 @@ func cachedFragment(key string, ttl time.Duration, build func() Element) string 
 // productCard is an expensive-to-render component cached per product ID.
 func productCard(id int, name, desc string, price float64) string {
 	key := fmt.Sprintf("product:%d", id)
-	return cachedFragment(key, 5*time.Minute, func() Element {
+	return cachedFragment(key, 5*time.Minute, func() *Element {
 		return E("div").
 			A("class", "border rounded p-4 shadow-sm").
 			C(
@@ -187,13 +187,13 @@ var products = []struct {
 	{3, "Mechanical Keyboard", "Cherry MX Brown, TKL layout.", 129.99},
 }
 
-func homePage() Element {
+func homePage() *Element {
 	cards := Map(products, func(p struct {
 		ID    int
 		Name  string
 		Desc  string
 		Price float64
-	}) Element {
+	}) *Element {
 		// productCard returns a cached HTML string; wrap it with Raw() so it is
 		// inserted verbatim into the parent element.
 		return Raw(productCard(p.ID, p.Name, p.Desc, p.Price))

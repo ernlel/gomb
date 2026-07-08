@@ -2,7 +2,7 @@ package layout
 
 import "github.com/ernlel/gomb"
 
-func Header() gomb.Element {
+func Header() *gomb.Element {
 	E := gomb.E
 	return E("header").
 		A("class", "bg-blue-600 text-white p-4").

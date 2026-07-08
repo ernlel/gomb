@@ -101,7 +101,7 @@ package html
 import "github.com/ernlel/gomb"
 
 // Named constructors for every standard HTML element.
-// Each accepts optional children (gomb.Element) and attributes (gomb.Attr) inline:
+// Each accepts optional children (*gomb.Element) and attributes (gomb.Attr) inline:
 //
 //   Div(Attr{Key: "class", Value: "container"}, H1(Txt("Hello")))
 //   Div().Attr("class", "container").Children(H1().Text("Hello"))
@@ -112,7 +112,7 @@ import "github.com/ernlel/gomb"
 	for _, tag := range elements {
 		name := funcName(tag)
 		fmt.Fprintf(&buf, "\n// %s creates a <%s> element.\n", name, tag)
-		fmt.Fprintf(&buf, `func %s(args ...interface{}) gomb.Element { return buildElement("%s", args) }`+"\n", name, tag)
+		fmt.Fprintf(&buf, `func %s(args ...interface{}) *gomb.Element { return buildElement("%s", args) }`+"\n", name, tag)
 	}
 
 	src, err := format.Source(buf.Bytes())

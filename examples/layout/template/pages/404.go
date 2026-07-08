@@ -5,7 +5,7 @@ import (
 	"github.com/ernlel/gomb/examples/layout/template/layout"
 )
 
-func NotFoundPage() gomb.Element {
+func NotFoundPage() *gomb.Element {
 	E := gomb.E
 	content := E("div").
 		A("class", "not-found-content container mx-auto p-4").

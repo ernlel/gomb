@@ -5,7 +5,7 @@ import (
 	"github.com/ernlel/gomb/examples/layout/template/layout"
 )
 
-func ContactPage() gomb.Element {
+func ContactPage() *gomb.Element {
 	E := gomb.E
 	content := E("div").
 		A("class", "contact-page container mx-auto p-4").

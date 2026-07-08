@@ -14,7 +14,7 @@ func main() {
 		E("h1").T("Hello"),
 		E("ul").C(
 			// insert 10 elements
-			func() (elements []gomb.Element) {
+			func() (elements []*gomb.Element) {
 				for i := 0; i < 10; i++ {
 					elements = append(elements, E("li").T(fmt.Sprintf("item%d", i)))
 				}
@@ -26,7 +26,7 @@ func main() {
 			E("li").T("item1"),
 			E("br"),
 			E("li").T("item2"),
-			func() gomb.Element {
+			func() *gomb.Element {
 				if false {
 					return E("li").T("I am true")
 				} else if true {

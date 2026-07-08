@@ -5,7 +5,7 @@ import (
 	"github.com/ernlel/gomb/examples/layout/template/layout"
 )
 
-func HomePage() gomb.Element {
+func HomePage() *gomb.Element {
 	E := gomb.E
 	content := E("div").
 		A("class", "home-content container mx-auto p-4").

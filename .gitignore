@@ -4,16 +4,12 @@
 # Go test cache
 *.test
 
-# Compiled binaries and screenshots in examples
-examples/**/htmx
-examples/**/alpinejs
-examples/**/caching
-examples/**/test1
-examples/**/html-elements
-examples/**/screenshot.png
-
-# Linter binary
-cmd/gomblint/gomblint
+# Example binary artefacts
+examples/alpinejs/alpinejs
+examples/caching/caching
+examples/htmx/htmx
+examples/test1/test1
+examples/html-elements/html-elements
 
 # IDE
 .idea/
