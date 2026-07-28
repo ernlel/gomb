@@ -5,12 +5,12 @@ All notable changes to gomb will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] — 2026-07-29
+## [0.3.1] — 2026-07-29
 
 ### Fixed
 - Avoid inserting formatting newlines and indentation inside whitespace-sensitive elements (`textarea` and `pre`).
 
-## [1.2.0] — 2026-07-08
+## [0.3.0] — 2026-07-08
 
 ### Added
 - `.Class(names ...string)` — shorthand for `.A("class", Classes(...))`.
@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `Render(nil)` returns `ErrNilWriter` (identifiable sentinel) instead of `io.ErrShortWrite`.
 
-## [1.1.0] — 2026-07-08
+## [0.2.0] — 2026-07-08
 
 ### Changed
 - **Breaking:** Switched from value receivers to pointer receivers (`*Element`). `E()`, `A()`, `T()`, `C()` and all helpers now return `*Element`. Methods mutate in place and return the same pointer for chaining — no more accidental copy discards.
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `C()` skips nil children.
 - Immutability copy-on-write removed — `A()` and `C()` mutate the element directly.
 
-## [1.0.0] — 2026-07-07
+## [0.1.0] — 2026-07-07
 
 ### Added
 - `Classes(...names)` — space-join class names, skipping empties, for safe conditional CSS.
@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `<script>` and `<style>` text content is never entity-encoded.
 - `Raw()` provides explicit opt-in for unescaped content.
 
-[0.2.1]: https://github.com/ernlel/gomb/releases/tag/v0.2.1
-[1.2.0]: https://github.com/ernlel/gomb/releases/tag/v1.2.0
-[1.1.0]: https://github.com/ernlel/gomb/releases/tag/v1.1.0
-[1.0.0]: https://github.com/ernlel/gomb/releases/tag/v1.0.0
+[0.3.1]: https://github.com/ernlel/gomb/releases/tag/v0.3.1
+[0.3.0]: https://github.com/ernlel/gomb/releases/tag/v0.3.0
+[0.2.0]: https://github.com/ernlel/gomb/releases/tag/v0.2.0
+[0.1.0]: https://github.com/ernlel/gomb/releases/tag/v0.1.0
