@@ -113,7 +113,7 @@ func (e *Element) ToString() string {
 		return ""
 	}
 	var sb strings.Builder
-	e.render(&sb, "")
+	e.render(&sb, "", false)
 	return sb.String()
 }
 
@@ -275,11 +275,21 @@ var rawTextElements = map[string]bool{
 	"style":  true,
 }
 
-func (e *Element) render(sb *strings.Builder, indent string) {
+var whitespaceSensitiveElements = map[string]bool{
+	"pre":      true,
+	"textarea": true,
+}
+
+func (e *Element) render(sb *strings.Builder, indent string, noFormatting bool) {
 	const indentStr = "  "
 
 	if e.Tag == "" && e.TextContent == "" && len(e.ChildNodes) == 0 {
 		return
+	}
+
+	currentNoFormatting := noFormatting
+	if whitespaceSensitiveElements[e.Tag] {
+		currentNoFormatting = true
 	}
 
 	if e.Tag == "" {
@@ -288,15 +298,27 @@ func (e *Element) render(sb *strings.Builder, indent string) {
 			if !e.rawText {
 				text = html.EscapeString(text)
 			}
-			sb.WriteString(indent + text + "\n")
+			if currentNoFormatting {
+				sb.WriteString(text)
+			} else {
+				sb.WriteString(indent + text + "\n")
+			}
 		}
 		for _, child := range e.ChildNodes {
-			child.render(sb, indent+indentStr)
+			if currentNoFormatting {
+				child.render(sb, "", true)
+			} else {
+				child.render(sb, indent+indentStr, false)
+			}
 		}
 		return
 	}
 
-	sb.WriteString(indent + "<" + e.Tag)
+	if noFormatting {
+		sb.WriteString("<" + e.Tag)
+	} else {
+		sb.WriteString(indent + "<" + e.Tag)
+	}
 
 	keys := make([]string, 0, len(e.Attributes))
 	for k := range e.Attributes {
@@ -314,22 +336,47 @@ func (e *Element) render(sb *strings.Builder, indent string) {
 	}
 
 	if selfClosingTags[e.Tag] {
-		sb.WriteString(" />\n")
+		if currentNoFormatting {
+			sb.WriteString(" />")
+		} else {
+			sb.WriteString(" />\n")
+		}
 		return
 	}
-	sb.WriteString(">\n")
+
+	if currentNoFormatting {
+		sb.WriteString(">")
+	} else {
+		sb.WriteString(">\n")
+	}
 
 	if e.TextContent != "" {
 		text := e.TextContent
 		if !e.rawText && !rawTextElements[e.Tag] {
 			text = html.EscapeString(text)
 		}
-		sb.WriteString(indent + indentStr + text + "\n")
+		if currentNoFormatting {
+			sb.WriteString(text)
+		} else {
+			sb.WriteString(indent + indentStr + text + "\n")
+		}
 	}
 
 	for _, child := range e.ChildNodes {
-		child.render(sb, indent+indentStr)
+		if currentNoFormatting {
+			child.render(sb, "", true)
+		} else {
+			child.render(sb, indent+indentStr, false)
+		}
 	}
 
-	sb.WriteString(indent + "</" + e.Tag + ">\n")
+	if currentNoFormatting {
+		if !noFormatting {
+			sb.WriteString("</" + e.Tag + ">\n")
+		} else {
+			sb.WriteString("</" + e.Tag + ">")
+		}
+	} else {
+		sb.WriteString(indent + "</" + e.Tag + ">\n")
+	}
 }

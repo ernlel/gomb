@@ -521,3 +521,35 @@ func TestRenderByteCount(t *testing.T) {
 		t.Errorf("expected %d bytes, got %d", len(expected), n)
 	}
 }
+
+func TestWhitespaceSensitiveElements(t *testing.T) {
+	t.Run("textarea plain text content", func(t *testing.T) {
+		out := gomb.E("textarea").T("Hello World").ToString()
+		expected := "<textarea>Hello World</textarea>\n"
+		if out != expected {
+			t.Errorf("expected %q, got %q", expected, out)
+		}
+	})
+
+	t.Run("textarea nested inside formatted div", func(t *testing.T) {
+		out := gomb.E("div").C(
+			gomb.E("textarea").T("Hello\nWorld"),
+		).ToString()
+		expected := "<div>\n  <textarea>Hello\nWorld</textarea>\n</div>\n"
+		if out != expected {
+			t.Errorf("expected %q, got %q", expected, out)
+		}
+	})
+
+	t.Run("pre element with inner spans", func(t *testing.T) {
+		out := gomb.E("pre").C(
+			gomb.E("span").T("line1"),
+			gomb.E("span").T("line2"),
+		).ToString()
+		expected := "<pre><span>line1</span><span>line2</span></pre>\n"
+		if out != expected {
+			t.Errorf("expected %q, got %q", expected, out)
+		}
+	})
+}
+
